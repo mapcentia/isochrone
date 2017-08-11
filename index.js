@@ -21,6 +21,12 @@ var utils;
  *
  * @type {*|exports|module.exports}
  */
+var layers;
+
+/**
+ *
+ * @type {*|exports|module.exports}
+ */
 var backboneEvents;
 
 
@@ -40,6 +46,11 @@ var clear = function () {
     pointLayer.clearLayers();
     mapObj.removeLayer(pointLayer);
     mapObj.removeLayer(gridSource);
+    try {
+        xhr.abort();
+    } catch (e) {
+
+    }
 };
 
 /**
@@ -65,7 +76,7 @@ var profiles = {
     },
     foot: {
         radius: 6,
-        cellSize: 0.08,
+        cellSize: 0.07,
         concavity: 2,
         lengthThreshold: 0,
         endpoint: "http://gc2.io/galton/foot"
@@ -93,6 +104,7 @@ var gridSource = new L.GeoJSON(null, {
 
 var pointLayer = new L.FeatureGroup();
 
+var xhr;
 
 /**
  *
@@ -109,6 +121,7 @@ module.exports = module.exports = {
     set: function (o) {
         cloud = o.cloud;
         utils = o.utils;
+        layers = o.layers;
         backboneEvents = o.backboneEvents;
         return this;
     },
@@ -267,6 +280,9 @@ module.exports = module.exports = {
                                 console.error(e.message)
                             }
 
+                            layers.incrementCountLoading("_vidi_isochrone");
+                            backboneEvents.get().trigger("startLoading:layers");
+
                             mapObj.addLayer(gridSource);
                             mapObj.addLayer(pointLayer);
                             pointLayer.addLayer(
@@ -282,16 +298,29 @@ module.exports = module.exports = {
                             );
 
                             var url = new URL(me.state.endpoint);
+
                             Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+
                             (intervals.length > 0 ? intervals : [10, 20, 30]).forEach(interval => url.searchParams.append('intervals', interval));
-                            fetch(url.toString())
-                                .then(response => response.json())
-                                .then((data) => {
+                            
+
+                            xhr = $.ajax({
+                                dataType: 'json',
+                                url: url.toString(),
+                                type: "GET",
+                                success: function (data) {
                                     gridSource.addData(data);
-                                })
-                                .catch((error) => {
+
+                                },
+                                error: function () {
                                     console.error(error);
-                                });
+                                },
+                                complete: function () {
+                                    layers.decrementCountLoading("_vidi_isochrone");
+                                    backboneEvents.get().trigger("doneLoading:layers");
+                                }
+
+                            });
 
 
                         }, 250);
