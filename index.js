@@ -36,8 +36,6 @@ var backboneEvents;
  */
 var active = false;
 
-var fetch = require("node-fetch");
-
 var mapObj;
 var clicktimer;
 
