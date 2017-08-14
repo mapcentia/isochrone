@@ -39,17 +39,6 @@ var active = false;
 var mapObj;
 var clicktimer;
 
-var clear = function () {
-    gridSource.clearLayers();
-    pointLayer.clearLayers();
-    mapObj.removeLayer(pointLayer);
-    mapObj.removeLayer(gridSource);
-    try {
-        xhr.abort();
-    } catch (e) {
-
-    }
-};
 
 /**
  *
@@ -63,44 +52,23 @@ var profiles = {
         cellSize: 0.8,
         concavity: 2,
         lengthThreshold: 0,
-        endpoint: "http://gc2.io/galton/car"
+        endpoint: "https://gc2.io/galton/car"
     },
     bicycle: {
         radius: 15,
         cellSize: 0.2,
         concavity: 2,
         lengthThreshold: 0,
-        endpoint: "http://gc2.io/galton/bicycle"
+        endpoint: "https://gc2.io/galton/bicycle"
     },
     foot: {
         radius: 6,
         cellSize: 0.07,
         concavity: 2,
         lengthThreshold: 0,
-        endpoint: "http://gc2.io/galton/foot"
+        endpoint: "https://gc2.io/galton/foot"
     }
 };
-
-var gridSource = new L.GeoJSON(null, {
-    style: function (feature) {
-        return {
-            fillColor: (function getColor(d) {
-                return d > 30 ? '#FED976' :
-                    d > 25 ? '#FEB24C' :
-                        d > 20 ? '#FD8D3C' :
-                            d > 15 ? '#FC4E2A' :
-                                d > 10 ? '#E31A1C' :
-                                    '#BD0026';
-            }(feature.properties.time)),
-            weight: 0,
-            opacity: 0,
-            fillOpacity: 0.7
-        }
-    },
-    clickable: false
-});
-
-var pointLayer = new L.FeatureGroup();
 
 var xhr;
 
@@ -128,6 +96,8 @@ module.exports = module.exports = {
      *
      */
     init: function () {
+
+        var parentThis = this;
 
         /**
          *
@@ -273,7 +243,7 @@ module.exports = module.exports = {
                             };
 
                             try {
-                                clear();
+                                parentThis.clear();
                             } catch (e) {
                                 console.error(e.message)
                             }
@@ -281,9 +251,9 @@ module.exports = module.exports = {
                             layers.incrementCountLoading("_vidi_isochrone");
                             backboneEvents.get().trigger("startLoading:layers");
 
-                            mapObj.addLayer(gridSource);
-                            mapObj.addLayer(pointLayer);
-                            pointLayer.addLayer(
+                            mapObj.addLayer(parentThis.gridSource);
+                            mapObj.addLayer(parentThis.pointLayer);
+                            parentThis.pointLayer.addLayer(
                                 L.circleMarker([p.y, p.x], {
                                     color: '#ffffff',
                                     fillColor: '#000000',
@@ -300,26 +270,8 @@ module.exports = module.exports = {
                             Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
 
                             (intervals.length > 0 ? intervals : [10, 20, 30]).forEach(interval => url.searchParams.append('intervals', interval));
-                            
 
-                            xhr = $.ajax({
-                                dataType: 'json',
-                                url: url.toString(),
-                                type: "GET",
-                                success: function (data) {
-                                    gridSource.addData(data);
-
-                                },
-                                error: function () {
-                                    console.error(error);
-                                },
-                                complete: function () {
-                                    layers.decrementCountLoading("_vidi_isochrone");
-                                    backboneEvents.get().trigger("doneLoading:layers");
-                                }
-
-                            });
-
+                            parentThis.request(url.toString());
 
                         }, 250);
                     }
@@ -332,7 +284,7 @@ module.exports = module.exports = {
             }
 
             onClear(e) {
-                clear();
+                parentThis.clear();
             }
 
             render() {
@@ -360,7 +312,8 @@ module.exports = module.exports = {
                                         <div className="radio col-md-4">
                                             <label>
                                                 <input onClick={this.onTransport} type="radio"
-                                                       name="transport" value="car" defaultChecked="1"/>{utils.__("Driving", dict)}
+                                                       name="transport" value="car"
+                                                       defaultChecked="1"/>{utils.__("Driving", dict)}
                                             </label>
                                         </div>
                                         <div className="radio col-md-4">
@@ -413,7 +366,8 @@ module.exports = module.exports = {
                                     </fieldset>
 
                                     <fieldset style={this.infoText}>
-                                        <button onClick={this.onClear} type="button" className="btn btn-raised">{utils.__("Clear map", dict)}</button>
+                                        <button onClick={this.onClear} type="button"
+                                                className="btn btn-raised">{utils.__("Clear map", dict)}</button>
                                     </fieldset>
 
                                 </form>
@@ -436,8 +390,67 @@ module.exports = module.exports = {
                 document.getElementById(exId)
             );
         } catch (e) {
+            console.error(e.message);
         }
 
+    },
+
+    request: function (url) {
+        var me = this;
+        return new Promise(function (resolve, reject) {
+            xhr = $.ajax({
+                dataType: 'json',
+                url: url,
+                type: "GET",
+                success: function (data) {
+                    resolve(data);
+                    me.gridSource.addData(data);
+                },
+                error: function () {
+                    reject();
+                    console.error(error);
+
+                },
+                complete: function () {
+                    layers.decrementCountLoading("_vidi_isochrone");
+                    backboneEvents.get().trigger("doneLoading:layers");
+                }
+
+            });
+        })
+    },
+
+    pointLayer: new L.FeatureGroup(),
+
+    gridSource: new L.GeoJSON(null, {
+        style: function (feature) {
+            return {
+                fillColor: (function getColor(d) {
+                    return d > 30 ? '#FED976' :
+                        d > 25 ? '#FEB24C' :
+                            d > 20 ? '#FD8D3C' :
+                                d > 15 ? '#FC4E2A' :
+                                    d > 10 ? '#E31A1C' :
+                                        '#BD0026';
+                }(feature.properties.time)),
+                weight: 0,
+                opacity: 0,
+                fillOpacity: 0.7
+            }
+        },
+        clickable: false
+    }),
+
+    clear: function () {
+        this.gridSource.clearLayers();
+        this.pointLayer.clearLayers();
+        mapObj.removeLayer(this.pointLayer);
+        mapObj.removeLayer(this.gridSource);
+        try {
+            xhr.abort();
+        } catch (e) {
+
+        }
     },
 
     /**
@@ -474,7 +487,7 @@ module.exports = module.exports = {
      *
      */
     off: function () {
-        clear();
+        this.clear();
     }
 
 };
