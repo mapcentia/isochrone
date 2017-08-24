@@ -120,7 +120,7 @@ module.exports = module.exports = {
             },
 
             "Isochrone": {
-                "da_DK": "Isokron",
+                "da_DK": "Transporttid",
                 "en_US": "Isochrone"
             },
 
