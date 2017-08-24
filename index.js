@@ -390,7 +390,7 @@ module.exports = module.exports = {
                 document.getElementById(exId)
             );
         } catch (e) {
-            console.error(e.message);
+
         }
 
     },
