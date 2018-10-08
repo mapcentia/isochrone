@@ -50,23 +50,23 @@ var profiles = {
     car: {
         radius: 70,
         cellSize: 0.8,
-        concavity: 2,
-        lengthThreshold: 0,
-        endpoint: "https://gc2.io/galton/car"
+        concavity: 3,
+        lengthThreshold: 0.1,
+        endpoint: "https://galton-car.gc2.io"
     },
     bicycle: {
         radius: 15,
         cellSize: 0.2,
-        concavity: 2,
+        concavity: 3,
         lengthThreshold: 0,
-        endpoint: "https://gc2.io/galton/bicycle"
+        endpoint: "https://galton-bicycle.gc2.io"
     },
     foot: {
         radius: 6,
         cellSize: 0.07,
-        concavity: 2,
+        concavity: 3,
         lengthThreshold: 0,
-        endpoint: "https://gc2.io/galton/foot"
+        endpoint: "https://galton-foot.gc2.io"
     }
 };
 
@@ -167,7 +167,7 @@ module.exports = module.exports = {
 
         };
 
-        utils.createMainTab(exId, utils.__("Isochrone", dict), utils.__("Info", dict), require('./../../../browser/modules/height')().max);
+        utils.createMainTab(exId, utils.__("Isochrone", dict), utils.__("Info", dict), require('./../../../browser/modules/height')().max, "timer");
 
         /**
          *
@@ -291,89 +291,85 @@ module.exports = module.exports = {
                 return (
 
                     <div role='tabpanel'>
-                        <div className='panel panel-default'>
-                            <div className='panel-body'>
-                                <form className="form-horizontal">
-                                    <fieldset>
-                                        <div className="togglebutton">
-                                            <label><input id="isochrone-btn"
-                                                          type="checkbox"/>{utils.__("Activate", dict)}
-                                            </label>
-                                        </div>
-                                    </fieldset>
+                        <form className="form-horizontal">
+                            <fieldset>
+                                <div className="togglebutton">
+                                    <label><input id="isochrone-btn"
+                                                  type="checkbox"/>{utils.__("Activate", dict)}
+                                    </label>
+                                </div>
+                            </fieldset>
 
-                                    <div className="row" style={this.infoText}>
-                                        <div className="col-md-12" style={this.noPadding}>
-                                            <h4>{utils.__("Mode of transportation", dict)}</h4>
-                                        </div>
-                                    </div>
-
-                                    <fieldset>
-                                        <div className="radio col-md-4">
-                                            <label>
-                                                <input onClick={this.onTransport} type="radio"
-                                                       name="transport" value="car"
-                                                       defaultChecked="1"/>{utils.__("Driving", dict)}
-                                            </label>
-                                        </div>
-                                        <div className="radio col-md-4">
-                                            <label>
-                                                <input onClick={this.onTransport} type="radio"
-                                                       name="transport"
-                                                       value="bicycle"/>{utils.__("Biking", dict)}
-                                            </label>
-                                        </div>
-                                        <div className="radio col-md-4">
-                                            <label>
-                                                <input onClick={this.onTransport} type="radio"
-                                                       name="transport"
-                                                       value="foot"/>{utils.__("Walking", dict)}
-                                            </label>
-                                        </div>
-
-                                    </fieldset>
-
-                                    <div className="row" style={this.infoText}>
-                                        <div className="col-md-12" style={this.noPadding}>
-                                            <h4>{utils.__("Reach within increments of time", dict)}</h4>
-                                        </div>
-                                    </div>
-
-                                    <fieldset className='intervals'>
-                                        <div className="checkbox col-md-4">
-                                            <label>
-                                                <input id="i10" type="checkbox"
-                                                       defaultChecked='defaultChecked'
-                                                       defaultValue='10'/>10 {utils.__("Minutes", dict)}
-                                            </label>
-                                        </div>
-
-                                        <div className="checkbox col-md-4">
-                                            <label>
-                                                <input id="i20" type="checkbox"
-                                                       defaultChecked='defaultChecked'
-                                                       defaultValue='20'/>20 {utils.__("Minutes", dict)}
-                                            </label>
-                                        </div>
-
-                                        <div className="checkbox col-md-4">
-                                            <label>
-                                                <input id="i30" type="checkbox"
-                                                       defaultChecked='defaultChecked'
-                                                       defaultValue='30'/>30 {utils.__("Minutes", dict)}
-                                            </label>
-                                        </div>
-                                    </fieldset>
-
-                                    <fieldset style={this.infoText}>
-                                        <button onClick={this.onClear} type="button"
-                                                className="btn btn-raised">{utils.__("Clear map", dict)}</button>
-                                    </fieldset>
-
-                                </form>
-
+                            <div className="row" style={this.infoText}>
+                                <div className="col-md-12" style={this.noPadding}>
+                                    <h4>{utils.__("Mode of transportation", dict)}</h4>
+                                </div>
                             </div>
-                        </div>
+
+                            <fieldset>
+                                <div className="radio col-md-4">
+                                    <label>
+                                        <input onClick={this.onTransport} type="radio"
+                                               name="transport" value="car"
+                                               defaultChecked="1"/>{utils.__("Driving", dict)}
+                                    </label>
+                                </div>
+                                <div className="radio col-md-4">
+                                    <label>
+                                        <input onClick={this.onTransport} type="radio"
+                                               name="transport"
+                                               value="bicycle"/>{utils.__("Biking", dict)}
+                                    </label>
+                                </div>
+                                <div className="radio col-md-4">
+                                    <label>
+                                        <input onClick={this.onTransport} type="radio"
+                                               name="transport"
+                                               value="foot"/>{utils.__("Walking", dict)}
+                                    </label>
+                                </div>
+
+                            </fieldset>
+
+                            <div className="row" style={this.infoText}>
+                                <div className="col-md-12" style={this.noPadding}>
+                                    <h4>{utils.__("Reach within increments of time", dict)}</h4>
+                                </div>
+                            </div>
+
+                            <fieldset className='intervals'>
+                                <div className="checkbox col-md-4">
+                                    <label>
+                                        <input id="i10" type="checkbox"
+                                               defaultChecked='defaultChecked'
+                                               defaultValue='10'/>10 {utils.__("Minutes", dict)}
+                                    </label>
+                                </div>
+
+                                <div className="checkbox col-md-4">
+                                    <label>
+                                        <input id="i20" type="checkbox"
+                                               defaultChecked='defaultChecked'
+                                               defaultValue='20'/>20 {utils.__("Minutes", dict)}
+                                    </label>
+                                </div>
+
+                                <div className="checkbox col-md-4">
+                                    <label>
+                                        <input id="i30" type="checkbox"
+                                               defaultChecked='defaultChecked'
+                                               defaultValue='30'/>30 {utils.__("Minutes", dict)}
+                                    </label>
+                                </div>
+                            </fieldset>
+
+                            <fieldset style={this.infoText}>
+                                <button onClick={this.onClear} type="button"
+                                        className="btn btn-raised">{utils.__("Clear map", dict)}</button>
+                            </fieldset>
+
+                        </form>
+
                     </div>
 
 
@@ -386,7 +382,7 @@ module.exports = module.exports = {
 
         try {
             ReactDOM.render(
-                <Isochrone />,
+                <Isochrone/>,
                 document.getElementById(exId)
             );
         } catch (e) {
@@ -426,16 +422,23 @@ module.exports = module.exports = {
         style: function (feature) {
             return {
                 fillColor: (function getColor(d) {
-                    return d > 30 ? '#FED976' :
-                        d > 25 ? '#FEB24C' :
-                            d > 20 ? '#FD8D3C' :
-                                d > 15 ? '#FC4E2A' :
-                                    d > 10 ? '#E31A1C' :
-                                        '#BD0026';
+                    return d > 30 ? '#00aaFF' :
+                        d > 25 ? '#00aaFF' :
+                            d > 20 ? '#00aaFF' :
+                                d > 15 ? '#00aaFF' :
+                                    d > 10 ? '#00aaFF' :
+                                        '#00aaFF';
                 }(feature.properties.time)),
                 weight: 0,
                 opacity: 0,
-                fillOpacity: 0.7
+                fillOpacity: (function getColor(d) {
+                    return d > 30 ? '0.2' :
+                        d > 25 ? '0.3' :
+                            d > 20 ? '0.4' :
+                                d > 15 ? '0.5' :
+                                    d > 10 ? '0.6' :
+                                        '0.8';
+                }(feature.properties.time))
             }
         },
         clickable: false
